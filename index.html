@@ -1,0 +1,642 @@
+<html>
+<head>
+	<link href="http://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+	<link type="text/css" rel="stylesheet" href="css/materialize.min.css"  media="screen,projection"/>
+	<link rel="stylesheet" type="text/css" href="css/main.css"/>
+
+	<script src="js/dataframe.js"></script> 
+	<script src="js/BaseChart.js"></script>
+	<script src="js/Statistics.js"></script>
+</head>
+<body>
+	<h3 align="center">Open Space - Parks</h3>
+	
+	<div class="nav" align="center">
+		<a class="waves-effect waves-light btn" href="#" onclick="dataset1()" id="d1">DataSet 1</a>
+		<a class="waves-effect waves-light btn" href="#" onclick="dataset2()" id="d2">DataSet 2</a>
+		<a class="waves-effect waves-light btn" href="#" onclick="dataset3()" id="d3">DataSet 3</a>
+		<a class="waves-effect waves-light btn" href="#" onclick="dataset4()" id="d4">DataSet 4</a>
+		<a class="waves-effect waves-light btn" href="#" onclick="dataset5()" id="d5">DataSet 5</a>
+	</div>
+	
+	<div align="center" border="1" class="TableParent">	
+		<div id="outputDiv" class="ShowTable"></div>
+	</div>
+
+	<div id="checkBox" border="1"></div>
+
+	<div class="row">
+		<div class="col s6" align="right">
+			<a class="waves-effect waves-light btn" id="btn_AddFilter">Add Filter</a>
+		</div>
+		<div class="col s6" align="left">
+			<a class="waves-effect waves-light btn" id="btn_Statistics">Add Statistics</a>
+		</div>
+	</div>
+
+	<div id="filterArea" border="1">
+		<h5 align="center" id="label_exclude">Please select the Filters to Exclude(Categorical Value)</h5>
+		<div id="warningMessage"></div>
+		<div id="excludeArea" align="center" border="1"></div>
+		<h5 align="center" id="label_condition">Please Select the filter Condition</h5>
+		<div align="center" id="condition">
+			<input name="group1" type="radio" id="gt">
+  			<label for="gt">Greater than Equal to</label>
+      		<input name="group1" type="radio" id="lt">
+      		<label for="lt">Less than Equal to</label>
+      		<input name="group1" type="radio" id="et">
+      		<label for="et">Equal to</label>
+		</div>
+		<div id="filterValue" align="center"></div>
+		<h5 align="center">Select Chart</h5>
+		<div id="chartSelectionArea" align="center">
+			<input type="checkbox" class="filled-in" id="bar" name="chart">
+      		<label for="bar">Bar</label>
+      		<input type="checkbox" class="filled-in" id="line" name="chart">
+      		<label for="line">Line</label>
+      		<input type="checkbox" class="filled-in" id="pie" name="chart">
+      		<label for="pie">Pie</label>
+      		<input type="checkbox" class="filled-in" id="stacked" name="chart">
+      		<label for="stacked">Stacked</label>
+      		<input type="checkbox" class="filled-in" id="pivot" name="chart">
+      		<label for="pivot">Pivot</label>
+		</div>
+		<div align="center">
+			<a class="waves-effect waves-light btn" id="btn_PlotChart">Plot Chart</a>
+		</div>
+	</div>
+
+	<div id="statisticsArea" border="1">
+		<div class="row">
+			<div class="col s12" align="center">
+				<div id="selectColumnForStatistics"></div>
+			</div>
+			<div class="col s12" align="center">
+				<a class="waves-effect waves-light btn" id="btn_displayStatistics">Display Statistics</a>
+			</div>
+			<div class="col s12" align="center" id="statTable">
+				<div id="statisticsTable"></div>
+			</div>
+		</div>
+	</div>
+
+	<div id="chartArea">
+		<div border="1" id="barC">
+			<canvas id="barChart"></canvas>
+			<h5 align="center">Bar Chart</h5>
+		</div>
+		<div border="1" id="lineC">
+			<canvas id="lineChart"></canvas>
+			<h5 align="center">Line Chart</h5>
+		</div>
+		<div border="1" id="pieC">
+			<canvas id="pieChart" id="pirChart"></canvas>
+			<h5 align="center">Pie Chart</h5>
+		</div>
+		<div border="1" id="stackC">
+			<canvas id="stackedChart" id="stackedChart"></canvas>
+			<h5 align="center">Stack Chart</h5>
+		<div border="1" id="pivotC">
+			<canvas id="pivotChart" id="pivotChart"></canvas>
+			<h5 align="center">Pivot Chart</h5>
+		</div>
+	</div>
+
+
+	<script type="text/javascript">
+		var DataFrame = dfjs.DataFrame;	
+		var columns = "columns";
+		var strColumns;
+		function isNumber(n) {
+			return !isNaN(parseFloat(n)) && isFinite(n);
+		}
+
+		function addStatistics(df) {
+			document.getElementById('statisticsArea').style.display = 'block';
+			document.getElementById('filterArea').style.display = 'none';
+			document.getElementById('chartArea').style.display = "none";
+			var columns = document.getElementsByName("columns");
+			var selectedColumns = [];
+			var i;
+			for(i=0; i<columns.length; i++) {
+				if(columns[i].checked) {
+					selectedColumns.push(columns[i].id);
+				}
+			}
+			
+			datasetStatistics(selectedColumns, df);
+		}
+
+		function addFilter(df) {
+			document.getElementById('filterArea').style.display = 'block';
+			document.getElementById('statisticsArea').style.display = 'none';
+			var columns = document.getElementsByName("columns");
+			var selectedColumns = [];
+			var i;
+			for(i=0; i<columns.length; i++) {
+				if(columns[i].checked) {
+					selectedColumns.push(columns[i].id);
+				}
+			}
+			
+			datasetFilter(selectedColumns, df);
+		}
+
+		function datasetStatistics(selectedColumns, df) {
+			var numericColumns = [];
+			var heading = df.listColumns();			
+			for(var i=0; i<selectedColumns.length; i++){
+				if(isNumber(df.toArray()[0][selectedColumns[i]]) == false) {
+					stringColumns.push(selectedColumns[i]);
+				} 
+				else {
+					if (df.toArray()[0][selectedColumns[i]].length < 3) 
+						numericColumns.push(selectedColumns[i]);
+				}
+			}
+
+			if(numericColumns.length != 0)
+				displayStatisticsColumns(selectedColumns, numericColumns, df);
+			else {
+				document.getElementById('selectColumnForStatistics').innerHTML = "<h3>Please select Numeric Columns</h3>";
+				document.getElementById('btn_displayStatistics').style.display = "none";
+			}
+		}
+
+		function displayStatisticsColumns(selectedColumns, numericColumns, df) {
+			var heading = df.listColumns();
+			document.getElementById('btn_displayStatistics').style.display = "block";
+			var className = "filled-in"
+			var id = 9999;
+			var statisticsColumn = "<table class=bordered>"
+			for(var i=0; i<numericColumns.length; i++) {
+				var columnName = heading[numericColumns[i]];
+
+				if(i%6 == 0)
+					statisticsColumn += "<tr><td><input name=statisticsColumn type=checkbox id=" +id+ " class=" + className +"><label for="+id+ ">" + columnName + "</label></td>";
+
+				else if((i+1)%6 == 0)
+					statisticsColumn += "<td><input name=statisticsColumn type=checkbox id=" +id+ " class=" + className +"><label for="+id+ ">" + columnName + "</label></td></tr>";
+				else
+					statisticsColumn += "<td><input name=statisticsColumn type=checkbox id=" +id+ " class=" + className +"><label for="+id+ ">" + columnName + "</label></td>";
+
+				id++;
+			}
+
+			statisticsColumn += "</table>";
+			document.getElementById('selectColumnForStatistics').innerHTML = statisticsColumn;
+
+			document.getElementById('btn_displayStatistics').addEventListener("click", function() {
+				displayTable(selectedColumns, numericColumns, df);    
+			});
+		}
+
+		function displayTable(selectedColumns, numericColumns, df) {
+
+			var statistics = new Statistics(selectedColumns, numericColumns, df);
+
+			var display = statistics.generateStatistics();
+
+			document.getElementById('statisticsTable').innerHTML = display;
+		}
+
+		function datasetFilter(selectedColumns, df) {
+			
+			var stringColumns = [];
+			var numericColumns = [];
+			var heading = df.listColumns();			
+			for(var i=0; i<selectedColumns.length; i++){
+				if(isNumber(df.toArray()[0][selectedColumns[i]]) == false)
+				{
+					stringColumns.push(selectedColumns[i]);
+				} 
+				else {
+					if (df.toArray()[0][selectedColumns[i]].length < 3) 
+						numericColumns.push(selectedColumns[i]);
+					else
+						stringColumns.push(selectedColumns[i]);
+				}
+			}
+
+			displayExcludeArea(stringColumns, numericColumns, df);
+		}
+
+		function displayExcludeArea(stringColumns, numericColumns, df) {
+			if(numericColumns.length == 0) {
+				document.getElementById('condition').style.display = 'none';
+				document.getElementById('filterValue').style.display = 'none';
+				document.getElementById('label_condition').style.display = 'none';
+			} else {
+				document.getElementById('condition').style.display = 'block';
+				document.getElementById('filterValue').style.display = 'block';
+				document.getElementById('label_condition').style.display = 'block';
+			}
+			if(stringColumns.length == 0) {
+				document.getElementById('label_exclude').style.display = 'none';
+				document.getElementById('warningMessage').style.display = 'block';
+				document.getElementById('warningMessage').innerHTML = "<h3 align=center>Please Select Column</h3>";
+			} else {
+				document.getElementById('label_exclude').style.display = 'block';
+			}
+			var heading = df.listColumns();
+			var excludeCheckBox = "<table class=bordered>";
+			var className = "filled-in";
+			for(var i=0; i<stringColumns.length; i++) {
+				var num = Number(stringColumns[i]);
+				var columnName = heading[num];
+
+				var distinctValue = df.distinct(columnName).toArray();
+				for (var j=0; j<distinctValue.length; j++) {
+					id = j+2000
+					
+					if(j%6 == 0)
+						excludeCheckBox += "<tr><td><input name=excludeCheckBox type=checkbox id=" +id+ " class=" + className +"><label for="+id+ ">" + distinctValue[j] + "</label></td>";
+					else if((j+1)%6 == 0)
+						excludeCheckBox += "<td><input name=excludeCheckBox type=checkbox id=" +id+  " class=" + className +"><label for="+id+ ">" + distinctValue[j] + "</label></td></tr>";
+					else
+						excludeCheckBox += "<td><input name=excludeCheckBox type=checkbox id=" +id+ " class=" + className +"><label for="+id+ ">" + distinctValue[j] + "</label></td>";
+				}
+			} 
+			excludeCheckBox += "</table>";
+
+			document.getElementById("excludeArea").innerHTML = excludeCheckBox;
+
+			var numericConditionValue = [];
+			for(var k=0; k<numericColumns.length; k++){
+				var num = Number(numericColumns[k]);
+				var columnName = heading[num];
+				var distinctValue1 = df.distinct(columnName).toArray();
+				for (var j=0; j<distinctValue1.length; j++) {
+					var flag = numericConditionValue.includes(distinctValue1[j][0]);
+					if(flag == false){
+						numericConditionValue.push(distinctValue1[j][0]);
+					}
+				}
+			}
+			var filterCondition = "<h5 align=center>Please Select the Value for Filter Condition</h5>";
+			var m = 100000;
+			for(var i = 0; i<numericConditionValue.length; i++){
+				filterCondition += "<input name=conditionValue type=radio id=" + m + " value="+ numericConditionValue[i] +"><label for=" + m + ">" + numericConditionValue[i] + "</label>";
+				m++;
+			}
+
+			document.getElementById('filterValue').innerHTML = filterCondition;
+
+			document.getElementById('btn_PlotChart').addEventListener("click", function() {
+			    generateChartData(stringColumns, numericColumns, df,distinctValue);
+			});
+		}
+
+		function generateChartData(stringColumns, numericColumns, df,dv) {
+			document.getElementById('chartArea').style.display = "block";
+			var excludedData = document.getElementsByName('excludeCheckBox');
+			var excludeValue = [];
+			for(var i=0; i<excludedData.length; i++) {
+				if(excludedData[i].checked) {
+
+					excludeValue.push(excludedData[i].id);
+				}
+			}
+
+			var heading = df.listColumns();
+			var conditionStringColumns = [];
+			for(var i=0; i<stringColumns.length; i++) {
+				var columnName = heading[stringColumns[i]];
+				var dfArray = df.select(columnName).toArray();
+				
+				for(var j=0; j<excludeValue.length; j++) {
+					if(dfArray[j][0].includes(dv[excludeValue[j]-2000])) {
+						conditionStringColumns.push(columnName);
+					}
+				}
+			}
+			var dataframe = df;
+			if(conditionStringColumns.length != 0) {
+				for(var i=0; i<conditionStringColumns.length; i++) {
+					dataframe = dataframe.filter(row => row.get(conditionStringColumns[i]).includes(dv[excludeValue[i]-2000])==false);
+				} 
+			}
+
+			var condition = document.getElementsByName('group1');
+			var filterValue = document.getElementsByName('conditionValue');
+			for(var i=0; i<condition.length; i++) {
+				if(condition[i].checked) {
+					for(var j=0; j<filterValue.length; j++) {
+						if(filterValue[j].checked){
+							var condi = condition[i].id;
+							var value = filterValue[j].value;
+
+							for(var k=0; k<numericColumns.length; k++) {
+								if(condi == 'gt') {
+									dataframe = dataframe.filter(row => row.get(heading[numericColumns[k]]) >= Number(value));
+								} else if(condi == 'lt') {
+									dataframe = dataframe.filter(row => row.get(heading[numericColumns[k]]) <= Number(value));
+								} else if(condi == 'et') {
+									dataframe = dataframe.filter(row => row.get(heading[numericColumns[k]]) == Number(value));
+								}
+							}
+						}
+					}
+				}
+			}
+
+			var label = [];
+			for(var i=0; i<stringColumns.length; i++) {
+				var dataframeArray = dataframe.select(heading[stringColumns[i]]).distinct(heading[stringColumns[i]]).toArray();
+				for(var j=0; j<dataframeArray.length; j++) {
+					label.push(dataframeArray[j][0]);
+				}
+			} 
+
+			var j=0;
+			var data = [];
+			for(var i=0; i<stringColumns.length; i++) {
+				var dataframeArray = dataframe.select(heading[stringColumns[i]]).distinct(heading[stringColumns[i]]).count();
+				dataframeArray = dataframeArray+j;
+				while(dataframeArray != j) {
+					var count = dataframe.filter(row => row.get(heading[stringColumns[i]]) == label[j]).count();
+					data.push(count);
+					j++;
+				}
+			}
+
+			generateChart(data, label);
+		}
+
+		function generateChart(data, label) {
+			document.getElementById('chartArea').style.display = "block";
+
+			var chartType = document.getElementsByName('chart');
+
+			for(var i=0; i<chartType.length; i++) {
+				if(chartType[i].checked) {
+					var chartTyp = chartType[i].id;
+					if(chartTyp == "bar") {
+						// bar
+						var area = document.getElementById('barChart');
+						var bar = new ChartController(area, data, label, 'bar');
+						bar.findChartInstance();
+					} else if (chartTyp == "line") {
+						// line
+						var area = document.getElementById('lineChart');
+						var line = new ChartController(area, data, label, 'line');
+						line.findChartInstance();
+					} else if (chartTyp == "pie") {
+						// pie
+						var area = document.getElementById('pieChart');
+						var pie = new ChartController(area, data, label, 'pie');
+						pie.findChartInstance();
+					} else if (chartTyp == "stacked") {
+						// stacked
+						var area = document.getElementById('stackedChart');
+						var stack = new ChartController(area, data, label, 'stacked');
+						stack.findChartInstance();
+					} else if (chartTyp == "pivot") {
+						// pivot
+						var area = document.getElementById('pivotChart');
+						var pivot = new ChartController(area, data, label, 'pivot');
+						pivot.findChartInstance();
+					}
+				}
+			}
+		}
+
+		function dataset1() {
+			DataFrame.fromCSV('Datasets/Parks_-_Locations_Chicago.csv').then(
+				df => { 
+					var arr = df.toArray();
+					var heading = df.listColumns();
+					var HTML = "<table class=bordered border=1 width=100%><tr>";
+					for(var k=0; k<heading.length; k++){
+						HTML += "<td><b>" + heading[k] + "</b></td>";
+					}
+					HTML += "</tr>";
+					for(var i=0;i<arr.length;i++)
+					{
+						HTML +=  "<tr>";
+						for(var j=0; j<arr[i].length; j++){
+							HTML += "<td align=center>"+arr[i][j]+"</td>";
+						}
+						HTML +=  "</tr>";
+					}
+					HTML += "</table>";
+					document.getElementById("outputDiv").innerHTML = HTML;
+
+					var checkBox = "<h5 align=center>Please Select Column</h5><br><table class=bordered>";
+					for(var i=0; i<heading.length; i++){
+						if(i%6 == 0)
+							checkBox += "<tr><td><input type=checkbox id=" + i + " name=" + columns +" class=filled-in><label for="+i+">" + heading[i] + "</label></td>";
+						else if((i+1)%6 == 0)
+							checkBox += "<td><input type=checkbox id=" + i + " name=" + columns +" class=filled-in><label for="+i+">" + heading[i] + "</label></td></tr>";
+						else
+							checkBox += "<td><input type=checkbox id=" + i + " name=" + columns +" class=filled-in><label for="+i+">" + heading[i] + "</label></td>";
+					}
+					checkBox += "</table>";
+					document.getElementById("checkBox").innerHTML = checkBox;
+
+					document.getElementById("btn_AddFilter").style.display = 'block';
+
+					document.getElementById("btn_Statistics").style.display = 'block';
+
+					document.getElementById("btn_AddFilter").addEventListener("click", function() {
+					    addFilter(df);
+					});
+
+					document.getElementById("btn_Statistics").addEventListener("click", function() {
+					    addStatistics(df);
+					});
+				}
+			);	
+		}
+		function dataset2() {
+			DataFrame.fromCSV('Datasets/Department_of_Recreation_and_Parks__Facility_and_Park_Information_LA.csv').then(
+				df => { 
+					var arr = df.toArray();
+					var heading = df.listColumns();
+					var HTML = "<table class=bordered border=1 width=100%><tr>";
+					for(var k=0; k<heading.length; k++){
+						HTML += "<td><b>" + heading[k] + "</b></td>";
+					}
+					HTML += "</tr>";
+					for(var i=0;i<arr.length;i++)
+					{
+						HTML +=  "<tr>";
+						for(var j=0; j<arr[i].length; j++){
+							HTML += "<td align=center>"+arr[i][j]+"</td>";
+						}
+						HTML +=  "</tr>";
+					}
+					HTML += "</table>";
+					document.getElementById("outputDiv").innerHTML = HTML;
+
+					var checkBox = "<h5 align=center>Please Select Column</h5><br><table class=bordered>";
+					for(var i=0; i<heading.length; i++){
+						if(i%6 == 0)
+							checkBox += "<tr><td><input type=checkbox id=" + i + " name=" + columns +" class=filled-in><label for="+i+">" + heading[i] + "</label></td>";
+						else if((i+1)%6 == 0)
+							checkBox += "<td><input type=checkbox id=" + i + " name=" + columns +" class=filled-in><label for="+i+">" + heading[i] + "</label></td></tr>";
+						else
+							checkBox += "<td><input type=checkbox id=" + i + " name=" + columns +" class=filled-in><label for="+i+">" + heading[i] + "</label></td>";
+					}
+					checkBox += "</table>";
+					document.getElementById("checkBox").innerHTML = checkBox;
+
+					document.getElementById("btn_AddFilter").style.display = 'block';
+
+					document.getElementById("btn_Statistics").style.display = 'block';
+
+					document.getElementById("btn_AddFilter").addEventListener("click", function() {
+					    addFilter(df);
+					});
+
+					document.getElementById("btn_Statistics").addEventListener("click", function() {
+					    addStatistics(df);
+					});
+				}
+			);
+		}
+		function dataset3() {
+			DataFrame.fromCSV('Datasets/BOUNDARIES_city_of_austin_park.csv').then(
+				df => { 
+					var arr = df.toArray();
+					var heading = df.listColumns();
+					var HTML = "<table class=bordered border=1 width=100%><tr>";
+					for(var k=0; k<heading.length; k++){
+						HTML += "<td><b>" + heading[k] + "</b></td>";
+					}
+					HTML += "</tr>";
+					for(var i=0;i<arr.length;i++)
+					{
+						HTML +=  "<tr>";
+						for(var j=0; j<arr[i].length; j++){
+							HTML += "<td align=center>"+arr[i][j]+"</td>";
+						}
+						HTML +=  "</tr>";
+					}
+					HTML += "</table>";
+					document.getElementById("outputDiv").innerHTML = HTML;
+
+					var checkBox = "<h5 align=center>Please Select Column</h5><br><table class=bordered>";
+					for(var i=0; i<heading.length; i++){
+						if(i%6 == 0)
+							checkBox += "<tr><td><input type=checkbox id=" + i + " name=" + columns +" class=filled-in><label for="+i+">" + heading[i] + "</label></td>";
+						else if((i+1)%6 == 0)
+							checkBox += "<td><input type=checkbox id=" + i + " name=" + columns +" class=filled-in><label for="+i+">" + heading[i] + "</label></td></tr>";
+						else
+							checkBox += "<td><input type=checkbox id=" + i + " name=" + columns +" class=filled-in><label for="+i+">" + heading[i] + "</label></td>";
+					}
+					checkBox += "</table>";
+					document.getElementById("checkBox").innerHTML = checkBox;
+
+					document.getElementById("btn_AddFilter").style.display = 'block';
+
+					document.getElementById("btn_Statistics").style.display = 'block';
+
+					document.getElementById("btn_AddFilter").addEventListener("click", function() {
+					    addFilter(df);
+					});
+
+					document.getElementById("btn_Statistics").addEventListener("click", function() {
+					    addStatistics(df);
+					});
+				}
+			);
+		}
+		function dataset4() {
+			DataFrame.fromCSV('Datasets/Mecklenburg_County_Park_Locations.csv').then(
+				df => { 
+					var arr = df.toArray();
+					var heading = df.listColumns();
+					var HTML = "<table class=bordered border=1 width=100%><tr>";
+					for(var k=0; k<heading.length; k++){
+						HTML += "<td><b>" + heading[k] + "</b></td>";
+					}
+					HTML += "</tr>";
+					for(var i=0;i<arr.length;i++)
+					{
+						HTML +=  "<tr>";
+						for(var j=0; j<arr[i].length; j++){
+							HTML += "<td align=center>"+arr[i][j]+"</td>";
+						}
+						HTML +=  "</tr>";
+					}
+					HTML += "</table>";
+					document.getElementById("outputDiv").innerHTML = HTML;
+
+					var checkBox = "<h5 align=center>Please Select Column</h5><br><table class=bordered>";
+					for(var i=0; i<heading.length; i++){
+						if(i%6 == 0)
+							checkBox += "<tr><td><input type=checkbox id=" + i + " name=" + columns +" class=filled-in><label for="+i+">" + heading[i] + "</label></td>";
+						else if((i+1)%6 == 0)
+							checkBox += "<td><input type=checkbox id=" + i + " name=" + columns +" class=filled-in><label for="+i+">" + heading[i] + "</label></td></tr>";
+						else
+							checkBox += "<td><input type=checkbox id=" + i + " name=" + columns +" class=filled-in><label for="+i+">" + heading[i] + "</label></td>";
+					}
+					checkBox += "</table>";
+					document.getElementById("checkBox").innerHTML = checkBox;
+
+					document.getElementById("btn_AddFilter").style.display = 'block';
+
+					document.getElementById("btn_Statistics").style.display = 'block';
+
+					document.getElementById("btn_AddFilter").addEventListener("click", function() {
+					    addFilter(df);
+					});
+
+					document.getElementById("btn_Statistics").addEventListener("click", function() {
+					    addStatistics(df);
+					});
+				}
+			);
+		}
+		function dataset5() {
+			DataFrame.fromCSV('Datasets/Open_Space_Boston.csv').then(
+				df => { 
+					var arr = df.toArray();
+					var heading = df.listColumns();
+					var HTML = "<table class=bordered border=1 width=100%><tr>";
+					for(var k=0; k<heading.length; k++){
+						HTML += "<td><b>" + heading[k] + "</b></td>";
+					}
+					HTML += "</tr>";
+					for(var i=0;i<arr.length;i++)
+					{
+						HTML +=  "<tr>";
+						for(var j=0; j<arr[i].length; j++){
+							HTML += "<td align=center>"+arr[i][j]+"</td>";
+						}
+						HTML +=  "</tr>";
+					}
+					HTML += "</table>";
+					document.getElementById("outputDiv").innerHTML = HTML;
+
+					var checkBox = "<h5 align=center>Please Select Column</h5><br><table class=bordered>";
+					for(var i=0; i<heading.length; i++){
+						if(i%6 == 0)
+							checkBox += "<tr><td><input type=checkbox id=" + i + " name=" + columns +" class=filled-in><label for="+i+">" + heading[i] + "</label></td>";
+						else if((i+1)%6 == 0)
+							checkBox += "<td><input type=checkbox id=" + i + " name=" + columns +" class=filled-in><label for="+i+">" + heading[i] + "</label></td></tr>";
+						else
+							checkBox += "<td><input type=checkbox id=" + i + " name=" + columns +" class=filled-in><label for="+i+">" + heading[i] + "</label></td>";
+					}
+					checkBox += "</table>";
+					document.getElementById("checkBox").innerHTML = checkBox;
+
+					document.getElementById("btn_AddFilter").style.display = 'block';
+
+					document.getElementById("btn_Statistics").style.display = 'block';
+
+					document.getElementById("btn_AddFilter").addEventListener("click", function() {
+					    addFilter(df);
+					});
+
+					document.getElementById("btn_Statistics").addEventListener("click", function() {
+					    addStatistics(df);
+					});
+				}
+			);
+		}	
+	</script>
+</body>
+</html>

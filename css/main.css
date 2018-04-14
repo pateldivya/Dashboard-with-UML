@@ -1,0 +1,119 @@
+.ShowTable {
+	width: 100%;
+	height: 500px;
+	overflow: scroll;
+    border-color: black;
+}
+.DropDown{
+    margin-top: 15px;
+}
+.TableParent {
+    border: solid;
+    border-color: black;
+    margin-top: 10px;
+    margin-left: 5px;
+    margin-right: 5px;
+}
+#btn_AddFilter {
+    display: none;
+    width: 200px;
+    margin-top: 10px;
+}
+#btn_Statistics {
+    display: none;
+    width: 200px;
+    margin-top: 10px;
+}
+#btn_PlotChart {
+    width: 200px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+#btn_displayStatistics {
+    width: 200px;
+    margin-top: 10px;
+}
+#checkBox {
+    margin-left: 15px;
+}
+body{
+	background-color: #FBFCFC;
+}
+
+h3 {
+	color: #C70039;
+}
+
+.nav {
+    align-content: center;
+    margin-left: 10px;
+}
+
+#filterArea {
+    display: none;
+}
+
+#statisticsArea {
+    display: none;
+}
+table { border-collapse: collapse; }
+tr { 
+    border-top: solid 1px #000; 
+    border-bottom: solid 1px #000;
+}
+
+td {
+  border-right: solid 1px #000; 
+  border-left: solid 1px #000;
+}
+
+#chartArea {
+    display: none;
+}
+
+#checkBox {
+    border: solid;
+    border-color: black;
+}
+
+#filterArea {
+    border: solid;
+    border-color: black;
+}
+
+#statisticsArea {
+    border: solid;
+    border-color: black;
+}
+
+#lineC {
+    border: solid;
+    border-color: black;
+}
+
+#barC {
+    border: solid;
+    border-color: black;
+}
+
+#pieC {
+    border: solid;
+    border-color: black;
+}
+#stackC {
+    border: solid;
+    border-color: black;
+}
+#pivotC {
+    border: solid;
+    border-color: black;
+    margin-bottom: 30px;
+}
+
+#statTable {
+    margin-top: 10px;
+}
+
+#warningMessage {
+    display: none;
+}
